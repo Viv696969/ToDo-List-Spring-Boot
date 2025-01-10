@@ -11,6 +11,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.util.Optional;
+
 @Service
 public class AuthService {
 
@@ -45,12 +47,27 @@ public class AuthService {
             CustomUser user=new CustomUser();
             user.setEmail(registerUserReqDTO.getEmail());
             user.setHashedPassword(encoder.encode(password));
-            System.out.println(user);
             user=customUserRepository.save(user);
             String token=jwtHelper.createToken(user.getId(), user.getEmail());
             return ResponseEntity.status(HttpStatus.CREATED).body(
                     new MssgRespDTO("Registeration Successfull...",true,token)
             );
         }
+    }
+
+
+    public ResponseEntity<?> loginUser(String email,String password) {
+//        1. check if user exits
+//        2. if exists check password
+//        3. create token
+        Optional<CustomUser> user=customUserRepository.findByEmail(email);
+        if (user.isEmpty())
+            return ResponseEntity.status(400).body(new MssgRespDTO("No Such User with "+email+" exists...",false));
+        if (!encoder.matches(password,user.get().getHashedPassword()))
+            return ResponseEntity.status(400).body(new MssgRespDTO("Incorrect password...",false));
+
+        String token=jwtHelper.createToken(user.get().getId(),user.get().getEmail());
+        return ResponseEntity.status(200).body(new MssgRespDTO("Login Successfull...",true,token));
+
     }
 }

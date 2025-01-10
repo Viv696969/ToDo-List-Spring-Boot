@@ -1,8 +1,11 @@
 package com.vivekempire.TodoList.entities;
 
 
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.vivekempire.TodoList.serializers.CustomUserSerializer;
 import jakarta.persistence.*;
 import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.Type;
 import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.LocalDateTime;
@@ -16,7 +19,8 @@ public class Todo {
 
     private String title;
 
-    @Lob
+
+    @Column(length=10485760)
     private String body;
 
     @CreationTimestamp
@@ -31,6 +35,7 @@ public class Todo {
     private boolean completed=false;
 
     @ManyToOne()
+    @JsonSerialize(using = CustomUserSerializer.class)
     private CustomUser customUser;
 
     public String getId() {

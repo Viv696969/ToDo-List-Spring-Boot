@@ -29,8 +29,6 @@ public class CustomUser {
     @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
-    @OneToMany(mappedBy = "customUser")
-    private List<Todo> todoList;
 
     public String getId() {
         return id;
@@ -72,13 +70,7 @@ public class CustomUser {
         this.createdAt = createdAt;
     }
 
-    public List<Todo> getTodoList() {
-        return todoList;
-    }
 
-    public void setTodoList(List<Todo> todoList) {
-        this.todoList = todoList;
-    }
 
     @Override
     public String toString() {
