@@ -9,6 +9,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -33,6 +34,25 @@ public class TodoService {
         todo.setTitle(todoReqDTO.getTitle());
         todo.setCustomUser(user);
         todoRepository.save(todo);
+
+    }
+
+    public void markTodoAsCompleted(String todoId) {
+        Todo todo=todoRepository.getById(todoId);
+        todo.setCompleted(true);
+        todoRepository.save(todo);
+
+    }
+
+    public void deleteTodo(String todoId) {
+        todoRepository.deleteById(todoId);
+    }
+
+    public List<Todo> getCompleted(String userId) {
+       CustomUser user= customUserRepository.findById(userId).get();
+       return todoRepository.findByCustomUserAndCompletedTrueOrderByUpdatedAtDesc(user);
+
+
 
     }
 }

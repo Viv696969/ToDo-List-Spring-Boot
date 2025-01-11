@@ -13,4 +13,5 @@ import java.util.Optional;
 public interface TodoRepository extends JpaRepository<Todo,String> {
 
     List<Todo> findByCustomUserAndCompletedFalseOrderByUpdatedAtAsc(CustomUser customUser);
+    List<Todo> findByCustomUserAndCompletedTrueOrderByUpdatedAtDesc(CustomUser customUser);
 }
