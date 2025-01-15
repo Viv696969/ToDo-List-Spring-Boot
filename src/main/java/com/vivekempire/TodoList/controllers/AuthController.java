@@ -6,6 +6,7 @@ import com.vivekempire.TodoList.dto.req.RegisterUserReqDTO;
 import com.vivekempire.TodoList.dto.resp.MssgRespDTO;
 import com.vivekempire.TodoList.services.AuthService;
 import com.vivekempire.TodoList.utils.JWTHelper;
+import jakarta.mail.MessagingException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -27,7 +28,7 @@ public class AuthController {
 
 
     @PostMapping("/register_user/")
-    public ResponseEntity<?> registerUser( @RequestBody RegisterUserReqDTO registerUserReqDTO){
+    public ResponseEntity<?> registerUser( @RequestBody RegisterUserReqDTO registerUserReqDTO) throws Exception {
 
         return authService.registerUser(registerUserReqDTO);
     }

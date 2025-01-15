@@ -5,6 +5,8 @@ import com.vivekempire.TodoList.dto.resp.MssgRespDTO;
 import com.vivekempire.TodoList.entities.CustomUser;
 import com.vivekempire.TodoList.repositories.CustomUserRepository;
 import com.vivekempire.TodoList.utils.JWTHelper;
+import com.vivekempire.TodoList.utils.MailUtility;
+import jakarta.mail.MessagingException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -25,12 +27,15 @@ public class AuthService {
     @Autowired
     private BCryptPasswordEncoder encoder;
 
+    @Autowired
+    private MailUtility mailUtility;
+
 
     private boolean userExists(String email){
         return customUserRepository.findByEmail(email).isPresent();
     }
 
-    public ResponseEntity<?> registerUser(RegisterUserReqDTO registerUserReqDTO){
+    public ResponseEntity<?> registerUser(RegisterUserReqDTO registerUserReqDTO) throws MessagingException {
         String password=registerUserReqDTO.getPassword();
         String confirmPassword=registerUserReqDTO.getConfirmPassword();
         if (!confirmPassword.equals(password)){
@@ -50,6 +55,11 @@ public class AuthService {
             user.setHashedPassword(encoder.encode(password));
             user=customUserRepository.save(user);
             String token=jwtHelper.createToken(user.getId(), user.getEmail());
+            mailUtility.sendHtmlMail(user.getEmail(),"Welcome to spring boot todo" , """
+                    <h1>Welcome to Our Service</h1>
+                    <p>We are glad to have you!</p>
+                    <p>Click <a href="https://example.com">here</a> to explore more.</p>
+                    """ );
             return ResponseEntity.status(HttpStatus.CREATED).body(
                     new MssgRespDTO("Registeration Successfull...",true,token)
             );
