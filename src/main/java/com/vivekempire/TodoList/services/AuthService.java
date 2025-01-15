@@ -13,6 +13,9 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 
 @Service
@@ -35,7 +38,7 @@ public class AuthService {
         return customUserRepository.findByEmail(email).isPresent();
     }
 
-    public ResponseEntity<?> registerUser(RegisterUserReqDTO registerUserReqDTO) throws MessagingException {
+    public ResponseEntity<?> registerUser(RegisterUserReqDTO registerUserReqDTO) throws Exception {
         String password=registerUserReqDTO.getPassword();
         String confirmPassword=registerUserReqDTO.getConfirmPassword();
         if (!confirmPassword.equals(password)){
@@ -55,11 +58,9 @@ public class AuthService {
             user.setHashedPassword(encoder.encode(password));
             user=customUserRepository.save(user);
             String token=jwtHelper.createToken(user.getId(), user.getEmail());
-            mailUtility.sendHtmlMail(user.getEmail(),"Welcome to spring boot todo" , """
-                    <h1>Welcome to Our Service</h1>
-                    <p>We are glad to have you!</p>
-                    <p>Click <a href="https://example.com">here</a> to explore more.</p>
-                    """ );
+            Map<String, Object> data=new HashMap<>();
+            data.put("email",user.getEmail());
+            mailUtility.sendTemplateMail(user.getEmail(),"Welcome to spring boot todo" ,data);
             return ResponseEntity.status(HttpStatus.CREATED).body(
                     new MssgRespDTO("Registeration Successfull...",true,token)
             );

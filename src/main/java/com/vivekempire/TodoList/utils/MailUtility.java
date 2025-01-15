@@ -10,12 +10,19 @@ import org.springframework.mail.javamail.MimeMailMessage;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
+import org.thymeleaf.TemplateEngine;
+import org.thymeleaf.context.Context;
+
+import java.util.Map;
 
 @Component
 public class MailUtility {
 
     @Autowired
     private JavaMailSender javaMailSender;
+
+    @Autowired
+    private TemplateEngine engine;
 
     @Async
     public void sendNormalMail(String to,String subject,String body){
@@ -36,6 +43,23 @@ public class MailUtility {
         mimeMessageHelper.setSubject(subject);
         mimeMessageHelper.setText(html,true);
         javaMailSender.send(mimeMessage);
+
+    }
+
+    @Async
+    public void sendTemplateMail(String to, String subject, Map<String,Object> data) throws Exception{
+        Context context=new Context();
+        context.setVariables(data);
+        String htmlContent=engine.process("register_welcome",context);
+        MimeMessage message=javaMailSender.createMimeMessage();
+        MimeMessageHelper messageHelper=new MimeMessageHelper(message,true);
+        messageHelper.setText(htmlContent,true);
+        messageHelper.setTo(to);
+        messageHelper.setSubject(subject);
+        messageHelper.setFrom("csgptmail@gmail.com");
+        javaMailSender.send(message);
+
+
 
     }
 }
