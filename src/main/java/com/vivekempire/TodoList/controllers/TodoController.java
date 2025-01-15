@@ -6,14 +6,13 @@ import com.vivekempire.TodoList.dto.resp.TodoRespDTO;
 import com.vivekempire.TodoList.entities.Todo;
 import com.vivekempire.TodoList.services.TodoService;
 import com.vivekempire.TodoList.utils.JWTHelper;
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.ScopeMetadata;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.Map;
 
 @RestController
 @RequestMapping("/todo")
@@ -27,26 +26,17 @@ public class TodoController
     private JWTHelper jwtHelper;
 
     @GetMapping("/get_all_todos")
-    public ResponseEntity<?> getAllTodos(@RequestHeader("Authorization") String token){
-        Map<String,Object> authorizationHashMap=jwtHelper.isValid(token);
-        if ((boolean)authorizationHashMap.get("status"))
-            return todoService.getAllTodos((String) authorizationHashMap.get("user_id"));
-        else
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-
-
+    public ResponseEntity<?> getAllTodos(HttpServletRequest request){
+        String user_id=(String)request.getAttribute("user_id");
+        return todoService.getAllTodos(user_id);
     }
 
     @PostMapping("/add_todo")
-    public ResponseEntity<?> addTodo(@RequestBody TodoReqDTO todoReqDTO,@RequestHeader("Authorization") String token){
+    public ResponseEntity<?> addTodo(@RequestBody TodoReqDTO todoReqDTO,HttpServletRequest request){
+        String user_id=(String)request.getAttribute("user_id");
+        todoService.addTodo(todoReqDTO, user_id);
+        return ResponseEntity.status(HttpStatus.CREATED).body(new TodoRespDTO("Todo Added successfully...", true));
 
-        Map<String,Object> authorizationHashMap=jwtHelper.isValid(token);
-        if ((boolean)authorizationHashMap.get("status")) {
-            todoService.addTodo(todoReqDTO, (String) authorizationHashMap.get("user_id"));
-            return ResponseEntity.status(HttpStatus.CREATED).body(new TodoRespDTO("Todo Added successfully...", true));
-        }
-        else
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
     }
 
     @PostMapping("/mark_as_completed")
@@ -62,14 +52,11 @@ public class TodoController
     }
 
     @PostMapping("/show_completed")
-    public ResponseEntity<?> showCompletedTodo(@RequestHeader("Authorization") String token){
-        Map<String,Object> authorizationHashMap=jwtHelper.isValid(token);
-        if ((boolean)authorizationHashMap.get("status")) {
-            List<Todo>completedTodos=todoService.getCompleted((String) authorizationHashMap.get("user_id"));
-            return ResponseEntity.status(HttpStatus.OK).body(completedTodos);
-        }
-        else
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+    public ResponseEntity<?> showCompletedTodo(HttpServletRequest request){
+        String user_id=(String)request.getAttribute("user_id");
+        List<Todo>completedTodos=todoService.getCompleted(user_id);
+        return ResponseEntity.status(HttpStatus.OK).body(completedTodos);
+
     }
 
 

@@ -25,6 +25,7 @@ public class AuthController {
     @Autowired
     private JWTHelper jwtHelper;
 
+
     @PostMapping("/register_user/")
     public ResponseEntity<?> registerUser( @RequestBody RegisterUserReqDTO registerUserReqDTO){
 

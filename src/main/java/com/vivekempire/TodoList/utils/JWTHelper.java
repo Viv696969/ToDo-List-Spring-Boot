@@ -25,7 +25,6 @@ public class JWTHelper {
                 .setExpiration(new Date(System.currentTimeMillis() + expirationTime))
                 .signWith(SignatureAlgorithm.HS256, SECRET)
                 .compact();
-        System.out.println(token);
         return token;
 
 
@@ -36,7 +35,7 @@ public class JWTHelper {
     }
 
     public Map<String,Object> isValid(String token){
-        token=token.split(" ")[1];
+        token=token.substring(7);
         Map<String, Object> data = new HashMap<>();
         try{
             Claims body = extractBody(token);

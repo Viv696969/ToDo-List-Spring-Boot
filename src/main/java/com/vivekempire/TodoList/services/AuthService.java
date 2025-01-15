@@ -22,7 +22,8 @@ public class AuthService {
     @Autowired
     private JWTHelper jwtHelper;
 
-    BCryptPasswordEncoder encoder=new BCryptPasswordEncoder(10);
+    @Autowired
+    private BCryptPasswordEncoder encoder;
 
 
     private boolean userExists(String email){
