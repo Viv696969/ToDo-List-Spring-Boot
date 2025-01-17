@@ -5,6 +5,7 @@ import com.vivekempire.TodoList.entities.CustomUser;
 import com.vivekempire.TodoList.entities.Todo;
 import com.vivekempire.TodoList.repositories.CustomUserRepository;
 import com.vivekempire.TodoList.repositories.TodoRepository;
+import com.vivekempire.TodoList.utils.RedisUtility;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -21,9 +22,11 @@ public class TodoService {
     @Autowired
     private CustomUserRepository customUserRepository;
 
+    @Autowired
+    private RedisUtility redisUtility;
+
     public ResponseEntity<?> getAllTodos(String userId) {
         Optional<CustomUser> customUser=customUserRepository.findById(userId);
-
         return ResponseEntity.ok().body(todoRepository.findByCustomUserAndCompletedFalseOrderByUpdatedAtAsc(customUser.get()));
     }
 

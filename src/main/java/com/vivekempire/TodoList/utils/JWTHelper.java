@@ -35,7 +35,6 @@ public class JWTHelper {
     }
 
     public Map<String,Object> isValid(String token){
-        token=token.substring(7);
         Map<String, Object> data = new HashMap<>();
         try{
             Claims body = extractBody(token);
