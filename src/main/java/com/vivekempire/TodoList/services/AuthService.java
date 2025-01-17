@@ -4,19 +4,18 @@ import com.vivekempire.TodoList.dto.req.RegisterUserReqDTO;
 import com.vivekempire.TodoList.dto.resp.MssgRespDTO;
 import com.vivekempire.TodoList.entities.CustomUser;
 import com.vivekempire.TodoList.repositories.CustomUserRepository;
+import com.vivekempire.TodoList.utils.GoogleOAuthUtility;
 import com.vivekempire.TodoList.utils.JWTHelper;
 import com.vivekempire.TodoList.utils.MailUtility;
-import jakarta.mail.MessagingException;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
+import org.springframework.http.*;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.util.LinkedMultiValueMap;
+import org.springframework.util.MultiValueMap;
+import org.springframework.web.client.RestTemplate;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Optional;
+import java.util.*;
 
 @Service
 public class AuthService {
@@ -32,6 +31,12 @@ public class AuthService {
 
     @Autowired
     private MailUtility mailUtility;
+
+    @Autowired
+    private RestTemplate restTemplate;
+
+    @Autowired
+    private GoogleOAuthUtility googleOAuthUtility;
 
 
     private boolean userExists(String email){
@@ -82,4 +87,53 @@ public class AuthService {
         return ResponseEntity.status(200).body(new MssgRespDTO("Login Successfull...",true,token));
 
     }
-}
+
+    public ResponseEntity<MssgRespDTO> handleGoogleLogIn(String code) {
+        try {
+//        create a hashmap with all required values
+            MultiValueMap<String, String> params = new LinkedMultiValueMap<>();
+            params.add("code", code);
+            params.add("client_id",googleOAuthUtility.getGoogleClientId() );
+            params.add("client_secret", googleOAuthUtility.getGoogleSecret());
+            params.add("redirect_uri", "http://localhost:5500/test.html");
+            params.add("grant_type", "authorization_code");
+//        create headers
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
+//        create request with params and headers
+            HttpEntity<MultiValueMap<String, String>> request = new HttpEntity<>(params, headers);
+//        send request
+            ResponseEntity<Map> response = restTemplate.postForEntity("https://oauth2.googleapis.com/token",
+                    request, Map.class
+            );
+//        get token
+            String idToken = (String) response.getBody().get("id_token");
+//        get user info
+            String tokenUrl = "https://oauth2.googleapis.com/tokeninfo?id_token=" + idToken;
+            ResponseEntity<Map> userDataResponse = restTemplate.getForEntity(tokenUrl, Map.class);
+            Map<String, String> userData = userDataResponse.getBody();
+            Optional<CustomUser> optionUser = customUserRepository.findByEmail((String) userData.get("email"));
+            CustomUser customUser;
+            if (optionUser.isEmpty()) {
+                customUser = new CustomUser();
+                customUser.setEmail((String) userData.get("email"));
+                customUser.setHashedPassword(encoder.encode(UUID.randomUUID().toString()));
+                customUserRepository.save(customUser);
+                Map<String, Object> data=new HashMap<>();
+                data.put("email",customUser.getEmail());
+                mailUtility.sendTemplateMail(customUser.getEmail(),"welcome to signing by google",data);
+            } else {
+                customUser = optionUser.get();
+
+            }
+            String token = jwtHelper.createToken(customUser.getId(), customUser.getEmail());
+            return ResponseEntity.status(200).body(new MssgRespDTO("Login Successfull...", true, token));
+        } catch (Exception e){
+
+            return ResponseEntity.status(200).body(new MssgRespDTO("Login Successfull...", false));
+        }
+    }
+
+
+    }
+

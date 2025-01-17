@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Google OAuth Flow</title>
+</head>
+<body>
+    <h1>Google OAuth Login</h1>
+    <button id="login-button">Login with Google</button>
+
+    <script>
+        const clientId = "390266246515-2fnkiniovkrtt6hs86jf0q5tln1h8e1v.apps.googleusercontent.com"; // Replace with your Google Client ID
+        const redirectUri = "http://localhost:5500/test.html";// Replace with your redirect URI
+        const scope = "https://www.googleapis.com/auth/userinfo.profile https://www.googleapis.com/auth/userinfo.email";
+
+        const responseType = "code";
+        const authUrl = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${clientId}&redirect_uri=${encodeURIComponent(redirectUri)}&response_type=${responseType}&scope=${encodeURIComponent(scope)}`;
+
+        const loginButton = document.getElementById("login-button");
+
+        loginButton.addEventListener("click", () => {
+            window.location.href = authUrl;
+        });
+
+        const handleAuthCallback = async () => {
+    // Parse the current URL
+    const urlParams = new URLSearchParams(window.location.search);
+
+    // Extract the "code" parameter from the query string
+    const code = urlParams.get("code");
+
+    console.log("Authorization Code:", code); // Log the code for debugging
+
+    if (code) {
+    try {
+        // Create a FormData object and append the code
+        const formData = new FormData();
+        formData.append("code", code);
+
+        // Make a POST request to the backend
+        const response = await fetch("http://localhost:8080/auth/google_login", {
+            method: "POST",
+            body: formData, // Use FormData instead of JSON
+        });
+
+        if (!response.ok) {
+            const errorData = await response.text(); // Handle non-JSON responses too
+            throw new Error(`Token exchange failed: ${response.status} - ${errorData}`);
+        }
+
+        const data = await response.json();
+        console.log("Token exchange success:", data);
+        alert(`Welcome, ${data.name}`);
+        // Optionally clear the code from the URL after successful login:
+        window.history.replaceState({}, document.title, window.location.pathname);
+
+    } catch (error) {
+        console.error("Error exchanging token:", error);
+        alert("Authentication failed. Please try again.");
+    }
+}
+else {
+        console.log("No authorization code found in the URL");
+    }
+};
+
+
+        // Call the handler on page load
+        window.addEventListener('load', handleAuthCallback);
+
+    </script>
+</body>
+</html>
