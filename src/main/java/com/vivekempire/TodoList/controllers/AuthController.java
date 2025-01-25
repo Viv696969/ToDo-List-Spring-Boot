@@ -3,7 +3,9 @@ package com.vivekempire.TodoList.controllers;
 
 import com.vivekempire.TodoList.dto.req.LoginUserReqDTO;
 import com.vivekempire.TodoList.dto.req.RegisterUserReqDTO;
+import com.vivekempire.TodoList.dto.resp.ErrorResponse;
 import com.vivekempire.TodoList.dto.resp.MssgRespDTO;
+import com.vivekempire.TodoList.exceptions.TodoCustomException;
 import com.vivekempire.TodoList.services.AuthService;
 import com.vivekempire.TodoList.utils.JWTHelper;
 import jakarta.mail.MessagingException;
@@ -15,6 +17,7 @@ import org.springframework.web.bind.annotation.*;
 
 import javax.print.attribute.standard.JobKOctets;
 import java.awt.image.RescaleOp;
+import java.util.Date;
 import java.util.Map;
 
 @RestController
@@ -53,4 +56,6 @@ public class AuthController {
         return authService.handleGoogleLogIn(code);
 
     }
+
 }
+

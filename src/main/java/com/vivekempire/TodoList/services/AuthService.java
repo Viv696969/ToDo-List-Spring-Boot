@@ -1,8 +1,10 @@
 package com.vivekempire.TodoList.services;
 
 import com.vivekempire.TodoList.dto.req.RegisterUserReqDTO;
+import com.vivekempire.TodoList.dto.resp.ErrorResponse;
 import com.vivekempire.TodoList.dto.resp.MssgRespDTO;
 import com.vivekempire.TodoList.entities.CustomUser;
+import com.vivekempire.TodoList.exceptions.TodoCustomException;
 import com.vivekempire.TodoList.repositories.CustomUserRepository;
 import com.vivekempire.TodoList.utils.GoogleOAuthUtility;
 import com.vivekempire.TodoList.utils.JWTHelper;
@@ -13,6 +15,7 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
+import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.client.RestTemplate;
 
 import java.util.*;
@@ -47,15 +50,11 @@ public class AuthService {
         String password=registerUserReqDTO.getPassword();
         String confirmPassword=registerUserReqDTO.getConfirmPassword();
         if (!confirmPassword.equals(password)){
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(
-                    new MssgRespDTO("Passwords Dont Match...",false)
-            );
+            throw new TodoCustomException("Passwords Dont Match...",HttpStatus.BAD_REQUEST);
         }
 
         if(userExists(registerUserReqDTO.getEmail())){
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(
-                    new MssgRespDTO("User already exists..",false)
-            );
+            throw new TodoCustomException("User Already Exists..with email : "+registerUserReqDTO.getEmail(),HttpStatus.BAD_REQUEST);
         }
         else{
             CustomUser user=new CustomUser();
@@ -79,9 +78,9 @@ public class AuthService {
 //        3. create token
         Optional<CustomUser> user=customUserRepository.findByEmail(email);
         if (user.isEmpty())
-            return ResponseEntity.status(400).body(new MssgRespDTO("No Such User with "+email+" exists...",false));
+            throw new TodoCustomException("No Such User exists...",HttpStatus.BAD_REQUEST);
         if (!encoder.matches(password,user.get().getHashedPassword()))
-            return ResponseEntity.status(400).body(new MssgRespDTO("Incorrect password...",false));
+            throw new TodoCustomException("Incorrect Password...",HttpStatus.BAD_REQUEST);
 
         String token=jwtHelper.createToken(user.get().getId(),user.get().getEmail());
         return ResponseEntity.status(200).body(new MssgRespDTO("Login Successfull...",true,token));
@@ -130,9 +129,11 @@ public class AuthService {
             return ResponseEntity.status(200).body(new MssgRespDTO("Login Successfull...", true, token));
         } catch (Exception e){
 
-            return ResponseEntity.status(200).body(new MssgRespDTO("Login Successfull...", false));
+            throw new TodoCustomException("Login Unsuccessfull...",HttpStatus.BAD_REQUEST);
         }
     }
+
+
 
 
     }
